@@ -1,4 +1,7 @@
 /**
+ * @OnlyCurrentDoc
+ * 権限を、このスクリプトを追加したスプレッドシートだけに限定する。
+ *
  * スプレッドシートの読み書きとメニュー。計算は Logic.js に分けている。
  * メールの送信は行わず、督促文は下書きとしてシートに出すだけにしている。
  */
@@ -85,6 +88,8 @@ function runInvoiceWorkflow() {
     ['種別', '受注ID・請求番号', '顧客コード', '内容'],
     issues.map(function (issue) { return [issue.code, issue.orderId, issue.customer, issue.detail]; }));
 
+  // 完了メッセージの待機中に中断されても結果が失われないよう、先に書き込みを確定する。
+  SpreadsheetApp.flush();
   SpreadsheetApp.getUi().alert(
     '請求 ' + invoices.length + '件を作成しました。確認が必要な項目は ' + issues.length + '件です。');
 }
@@ -117,5 +122,6 @@ function setupSampleData() {
     ['INV-202610-C002', "'2026-11-20", 50000],
     ['INV-202610-C777', "'2026-11-21", 12345]
   ]);
+  SpreadsheetApp.flush();
   SpreadsheetApp.getUi().alert('サンプルデータを入れました。メニューから「請求と入金状況を作成」を実行してください。');
 }

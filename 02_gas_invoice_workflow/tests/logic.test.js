@@ -25,6 +25,8 @@ class FakeSheet {
 function loadApp() {
   const sheets = new Map();
   const alerts = [];
+  const flushes = { count: 0 };
+  let flushesAtAlert = 0;
   const spreadsheet = {
     getSheetByName: (name) => sheets.get(name) || null,
     insertSheet: (name) => { const s = new FakeSheet(); sheets.set(name, s); return s; },
@@ -32,7 +34,15 @@ function loadApp() {
   const context = vm.createContext({
     SpreadsheetApp: {
       getActive: () => spreadsheet,
-      getUi: () => ({ alert: (m) => alerts.push(m) }),
+      getUi: () => ({
+        alert: (m) => {
+          // 上書き中止のメッセージは書き込みを伴わないので対象外。
+          if (!m.includes('上書きせず')) assert.ok(flushes.count > flushesAtAlert, 'メッセージの前に書き込みを確定すること');
+          flushesAtAlert = flushes.count;
+          alerts.push(m);
+        },
+      }),
+      flush: () => { flushes.count += 1; },
     },
     Utilities: { formatDate: (d) => d.toISOString().slice(0, 10) },
     Session: { getScriptTimeZone: () => 'Asia/Tokyo' },
